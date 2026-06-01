@@ -196,7 +196,7 @@
     <div class="header-banner">
         <div class="header-text">
             <h1>精測排程與量測管理系統</h1>
-            <p>🌱 歡迎使用精測智慧管理平台。本系統數據已透過瀏覽器雲端同步。<br>
+            <p>🌱 歡迎使用精測智慧管理平台。本系統數據已儲存於您的瀏覽器中。<br>
             <strong style="color: #d32f2f;">⚠️ 提醒：填完表單後，請務必將「精測排程編號」寫在外袋上！</strong></p>
         </div>
     </div>
@@ -375,13 +375,6 @@
         renderMachineCheckboxes();
         updateScheduleNo();
     };
-
-    window.addEventListener("storage", (e) => {
-        if (e.key === "savedRecords" || e.key === "partNoDatabase") {
-            loadData();
-            renderTable();
-        }
-    });
 
     function loadData() {
         if (localStorage.getItem("savedRecords")) savedRecords = JSON.parse(localStorage.getItem("savedRecords"));
