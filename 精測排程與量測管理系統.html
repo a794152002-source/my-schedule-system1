@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>精測排程與量測管理系統 - 皮克敏視覺全功能版</title>
+    <style>
+        /* 全域樣式：融入皮克敏大自然風格調色 */
+        body { 
+            font-family: "Microsoft JhengHei", Arial, sans-serif; 
+            background: #f1f6f0; 
+            padding: 20px; 
+            color: #333; 
+            position: relative;
+            min-height: 100vh;
+        }
+        .container { max-width: 1400px; margin: 0 auto; position: relative; z-index: 2; }
+        
+        /* ====== 圖片視覺區塊樣式 ====== */
+        .header-banner {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(76, 133, 64, 0.15);
+            margin-bottom: 20px;
+            border: 1px solid #e2ece0;
+        }
+        .header-text h1 {
+            margin: 0 0 10px 0;
+            color: #2e6f40;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-text p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* 卡片樣式 */
+        .card { 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 10px rgba(76, 133, 64, 0.15); 
+            margin-bottom: 20px; 
+            border: 1px solid #e2ece0;
+        }
+        
+        h2 { color: #2e6f40; margin-top: 0; border-bottom: 2px solid #52a447; padding-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        h2::before { content: "🌱"; font-size: 20px; } 
+        
+        /* 彈性佈局配置：左側輸入區，右側操作按鈕區 */
+        .main-layout {
+            display: flex;
+            gap: 25px;
+        }
+        .input-section {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .action-section {
+            width: 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: flex-start;
+            padding-top: 23px; /* 對齊標籤高度 */
+        }
+        
+        .form-group { margin-bottom: 15px; position: relative; } 
+        .form-group.full { grid-column: span 3; margin-bottom: 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; color: #3e603c; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #bccdb7; border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #fafdfa; }
+        input:focus, textarea:focus { border-color: #52a447; outline: none; box-shadow: 0 0 5px rgba(82, 164, 71, 0.3); }
+        
+        input[readonly] { background-color: #f0f4f0; color: #555; cursor: not-allowed; font-weight: bold; border-color: #d0ded0; }
+
+        /* 自訂料號下拉選單樣式 */
+        .part-no-wrapper { position: relative; width: 100%; }
+        .part-no-wrapper::after { content: "▼"; position: absolute; right: 12px; top: 12px; font-size: 10px; color: #666; pointer-events: none; }
+        .custom-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #bccdb7;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            z-index: 1000;
+            margin-top: 2px;
+        }
+        .dropdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 1px solid #f2f7f1;
+        }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background-color: #e8f3e6; }
+        .item-del-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .item-del-btn:hover { background-color: #fce8e6; }
+
+        /* 按鈕樣式調整 */
+        button.main-btn { 
+            width: 100%; 
+            padding: 14px; 
+            border: none; 
+            border-radius: 6px; 
+            font-size: 15px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            color: white; 
+            transition: all 0.2s; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .btn-add { background: #4caf50; padding: 18px !important; font-size: 16px !important; } .btn-add:hover { background: #388e3c; } 
+        .btn-export { background: #ff9800; } .btn-export:hover { background: #f57c00; } 
+        .btn-clear { background: #78909c; } .btn-clear:hover { background: #546e7a; } 
+        
+        /* 表格與操作按鈕樣式 */
+        .action-container { display: flex; gap: 4px; flex-wrap: wrap; }
+        .btn-action { color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 2px; }
+        .btn-edit { background: #8bc34a; color: #fff; } .btn-edit:hover { background: #7cb342; } 
+        .btn-meas { background: #fbc02d; color: #333; } .btn-meas:hover { background: #f9a825; }
+        .btn-retr { background: #00acc1; } .btn-retr:hover { background: #00838f; }
+        .btn-delete { background: #e53935; } .btn-delete:hover { background: #c62828; } 
+        
+        .error-msg { color: #dc3545; font-size: 12px; margin-top: 3px; font-weight: bold; }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; min-width: 1350px; border-radius: 6px; overflow: hidden; }
+        th, td { border: 1px solid #ddd; padding: 12px 10px; text-align: left; font-size: 13px; }
+        th { background-color: #43a047; color: white; position: sticky; top: 0; }
+        tr:nth-child(even) { background-color: #f8fbf7; }
+
+        /* 彈出視窗 (Modal) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); justify-content: center; align-items: center; }
+        .modal-content { background-color: white; padding: 25px; border-radius: 10px; width: 650px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.2); border: 1px solid #bccdb7; }
+        .modal-h3 { margin-top: 0; border-bottom: 2px solid #4caf50; padding-bottom: 8px; }
+        .modal-btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-modal-save { color: white; border: none; padding: 10px; flex: 1; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .btn-modal-close { background: #78909c; color: white; border: none; padding: 10px; flex: 1; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .time-input-group { display: flex; gap: 5px; }
+        .btn-complete { background: #26a69a; color: white; border: none; padding: 0 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; white-space: nowrap; }
+
+        /* 修改後的對齊樣式 */
+        .checkbox-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            background: #f9fdf9; 
+            padding: 15px; 
+            border-radius: 6px; 
+            border: 1px solid #e2ece0; 
+        }
+        .checkbox-item { 
+            font-size: 13px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            cursor: pointer; 
+            padding: 4px 0;
+        }
+        .checkbox-item input { width: 16px; height: 16px; margin: 0; }
+
+        .clear-confirm-text { font-size: 22px; font-weight: bold; color: #d32f2f; text-align: center; margin: 12px 0; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="header-banner">
+        <div class="header-text">
+            <h1>精測排程與量測管理系統</h1>
+            <p>🌱 歡迎使用精測智慧管理平台。本系統數據已透過瀏覽器雲端同步。<br>
+            <strong style="color: #d32f2f;">⚠️ 提醒：填完表單後，請務必將「精測排程編號」寫在外袋上！</strong></p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>精測排程申請</h2>
+        <div class="main-layout">
+            
+            <div class="input-section">
+                <div class="form-group">
+                    <label>精測排程編號 (請將委測編號寫在外袋上)：</label>
+                    <input type="text" id="scheduleNo" readonly placeholder="系統生成中...">
+                </div>
+                <div class="form-group">
+                    <label>申請日期：</label>
+                    <input type="date" id="applyDate" onchange="updateScheduleNo()">
+                </div>
+                <div class="form-group">
+                    <label>申請人工號：</label>
+                    <input type="text" id="applicantId" placeholder="輸入工號" onchange="autoFillName('applicantId', 'applicantName', 'err-app')">
+                    <input type="text" id="applicantName" readonly placeholder="申請人姓名" style="margin-top: 5px;">
+                    <div id="err-app" class="error-msg"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>料號 (請備註 L/R用/區別)：</label>
+                    <div class="part-no-wrapper">
+                        <input type="text" id="partNo" placeholder="請輸入或選擇歷史料號" autocomplete="off" onfocus="showDropdown()" oninput="filterDropdown()">
+                        <div id="customDropdown" class="custom-dropdown"></div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>尺寸總數 (支援 21/16 等格式)：</label>
+                    <input type="text" id="sizeTotal" placeholder="例如：32 或 21/16">
+                </div>
+                <div class="form-group">
+                    <label>數量：</label>
+                    <input type="number" id="quantity" placeholder="請輸入數量">
+                </div>
+
+                <div class="form-group full">
+                    <label>其他 (備註項目)：</label>
+                    <textarea id="remark" rows="2" placeholder="請手動輸入其他內容..."></textarea>
+                </div>
+            </div>
+
+            <div class="action-section">
+                <button class="main-btn btn-add" onclick="addRecord()">➕ 新增至暫存表</button>
+                <div style="height: 10px; border-top: 1px dashed #bccdb7; margin: 5px 0;"></div>
+                <button class="main-btn btn-export" onclick="exportToCSV()">💾 導出 Excel/CSV</button>
+                <button class="main-btn btn-clear" onclick="openClearConfirmModal()">🗑️ 清空今日暫存</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>今日檢驗暫存數據</h2>
+        <div class="table-container">
+            <table id="historyTable">
+                <thead>
+                    <tr>
+                        <th>1. 精測排程編號</th>
+                        <th>2. 申請日期</th>
+                        <th>3. 申請人</th>
+                        <th>4. 料號 (含備註)</th>
+                        <th>5. 完成時間</th>
+                        <th>6. 使用機台/工具</th>
+                        <th>7. 量測員</th>
+                        <th>8. 尺寸總數</th>
+                        <th>9. 數量</th>
+                        <th>10. 取回人員</th>
+                        <th>11. 其他</th>
+                        <th>管理操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="editModal" class="modal"><div class="modal-content"><h3 class="modal-h3" style="color: #689f38;">✏️ 修改完整排程資訊</h3><p style="font-size: 13px; color: #666; margin-bottom: 15px;">排程編號：<span id="editScheduleNo" style="font-weight: bold; color: #2e6f40;"></span></p><div class="form-group"><label>申請日期：</label><input type="date" id="modalApplyDate" onchange="updateModalScheduleNo()"></div><div class="form-group"><label>申請人工號/姓名：</label><input type="text" id="modalApplicantId" placeholder="輸入工號" onchange="autoFillName('modalApplicantId', 'modalApplicantName', 'err-mod-app')"><input type="text" id="modalApplicantName" readonly placeholder="申請人姓名" style="margin-top: 5px;"><div id="err-mod-app" class="error-msg"></div></div><div class="form-group"><label>料號 (含備註)：</label><input type="text" id="modalPartNo" placeholder="請輸入料號"></div><div class="form-group"><label>數量：</label><input type="number" id="modalQuantity" placeholder="請輸入數量"></div><div class="form-group"><label>尺寸總數：</label><input type="text" id="modalSizeTotal" placeholder="例如：32 或 21/16"></div><div class="form-group"><label>其他 (備註)：</label><textarea id="modalRemark" rows="2" placeholder="請輸入備註內容"></textarea></div><div class="modal-btn-group"><button class="btn-modal-save" style="background:#8bc34a;" onclick="saveEditedData()">💾 儲存修改</button><button class="btn-modal-close" onclick="closeModal('editModal')">取消</button></div></div></div>
+<div id="measModal" class="modal">
+    <div class="modal-content">
+        <h3 class="modal-h3" style="color: #f9a825;">🔬 補登：量測完成項目</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 15px;">排程編號：<span id="measScheduleNo" style="font-weight: bold; color: #2e6f40;"></span></p>
+        
+        <div class="form-group">
+            <label>完成時間：</label>
+            <div class="time-input-group">
+                <input type="text" id="modalFinishTime" value="未完成" readonly>
+                <button class="btn-complete" onclick="setModalFinishTime()">✅ 點選完成</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>使用機台/工具：</label>
+            <div class="checkbox-grid" id="machineCheckboxGroup">
+                </div>
+        </div>
+
+        <div class="form-group">
+            <label>量測結果：</label>
+            <div style="display: flex; gap: 20px; padding: 8px 5px; font-weight: bold;">
+                <label style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: #2e7d32;"><input type="radio" name="measResult" value="OK" checked style="width: auto;"> OK</label>
+                <label style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: #dc3545;"><input type="radio" name="measResult" value="NG" style="width: auto;"> NG</label>
+                <label style="display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: #ff9800;"><input type="radio" name="measResult" value="NA" style="width: auto;"> NA</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>量測員工號 (多位請用逗號分隔)：</label>
+            <input type="text" id="modalInspectorId" placeholder="例如：1001,1002" onchange="autoFillNames('modalInspectorId', 'modalInspectorName', 'err-mod-ins')">
+            <input type="text" id="modalInspectorName" readonly placeholder="量測員姓名顯示" style="margin-top: 5px;">
+            <div id="err-mod-ins" class="error-msg"></div>
+        </div>
+
+        <div class="modal-btn-group">
+            <button class="btn-modal-save" style="background:#fbc02d; color:#333;" onclick="saveMeasData()">💾 儲存量測結果</button>
+            <button class="btn-modal-close" onclick="closeModal('measModal')">取消</button>
+        </div>
+    </div>
+</div>
+<div id="retrModal" class="modal"><div class="modal-content"><h3 class="modal-h3" style="color: #00838f;">🏃 補登：取回人員登記</h3><p style="font-size: 13px; color: #666; margin-bottom: 15px;">排程編號：<span id="retrScheduleNo" style="font-weight: bold; color: #2e6f40;"></span></p><div class="form-group"><label>9. 取回人員工號：</label><input type="text" id="modalRetrieverId" placeholder="輸入工號" onchange="autoFillName('modalRetrieverId', 'modalRetrieverName', 'err-mod-ret')"><input type="text" id="modalRetrieverName" readonly placeholder="取回人員姓名" style="margin-top: 5px;"><div id="err-mod-ret" class="error-msg"></div></div><div class="modal-btn-group"><button class="btn-modal-save" style="background:#00acc1;" onclick="saveRetrData()">💾 儲存取回登記</button><button class="btn-modal-close" onclick="closeModal('retrModal')">取消</button></div></div></div>
+<div id="clearConfirmModal" class="modal">
+    <div class="modal-content" style="width: 420px; text-align: center; padding: 30px 25px;">
+        <h3 class="modal-h3" style="color: #d32f2f; border-bottom-color: #d32f2f; font-size: 18px;">⚠️ 確定要清空嗎？</h3>
+        <p class="clear-confirm-text">確定嗎？</p>
+        <p style="font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 20px;">執行此操作將自動匯出備份並清空下方所有紀錄。<br><span style="color: #78909c; font-size: 12px;">(歷史料號記憶將保留)</span></p>
+        <div class="modal-btn-group">
+            <button class="btn-modal-save" style="background: #e53935; padding: 12px;" onclick="executeClearTableRecords()">確定清空</button>
+            <button class="btn-modal-close" style="padding: 12px;" onclick="closeModal('clearConfirmModal')">取消</button>
+        </div>
+    </div>
+</div>
+<script>
+    let savedRecords = [];
+    let partNoDatabase = {};
+
+    const machineList = ["Tigo", "Micro Vu", "Werth", "Sensofar", "SEM", "CT", "OMM", "BG", "Keyence", "接觸式粗度儀", "Mic", "DC", "DG", "圓柱度機", "維氏硬度機", "牙規", "硬度機", "GOM軟體分析"];
+
+    const employeeDatabase = {
+        "102673": "蕭意霖", "100567": "白介威", "100830": "許書維", "100180": "方國輝",
+        "101556": "曾志原", "102684": "李柏興", "100834": "陳碧珠", "102428": "彭讚倫",
+        "100579": "翁維禧", "100721": "林鈺雲", "100284": "張育菁", "100155": "簡淑霞",
+        "100766": "李春菊", "100699": "蘇慧倫", "100628": "陳麗華", "102711": "賴易如",
+        "102057": "陳藝芳", "101965": "羅翌忻", "100064": "蔡芷妍", "102628": "廖冠評",
+        "102308": "江怡珊", "100033": "郭祐伶", "102239": "鍾莉珍", "102540": "許秀雲",
+        "102686": "吳沛虹", "102841": "藍珮瑜", "102725": "林安庭", "102727": "葉依柔",
+        "102739": "黃烱瑋", "102743": "呂育銘", "102803": "徐偉騰", "102534": "范芮瑄",
+        "102827": "林鍇瀚", "102839": "簡士凱", "720107": "高子淯", "720117": "連郁芬",
+        "720173": "蔡依珊", "720196": "涂素菁", "102438": "陳柔羽", "102402": "周國暉",
+        "102733": "簡伶靜", "102852": "張福耀", "102776": "李祐婷"
+    };
+    
+    const j1Employees = ["蕭意霖", "白介威", "許書維", "方國輝", "李柏興", "陳碧珠", "彭讚倫", "翁維禧", "林鈺雲", "張育菁", "簡淑霞", "李春菊", "蘇慧倫", "陳麗華", "賴易如", "羅翌忻", "蔡芷妍", "廖冠評", "郭祐伶", "藍珮瑜", "林安庭", "黃烱瑋", "呂育銘", "徐偉騰", "范芮瑄", "林鍇瀚", "簡士凱"];
+    const j2Employees = ["高子淯", "連郁芬", "蔡依珊", "涂素菁", "陳柔羽", "周國暉", "簡伶靜", "張福耀", "李祐婷"];
+    const j3Employees = ["曾志原", "陳藝芳", "江怡珊", "鍾莉珍", "許秀雲", "吳沛虹", "葉依柔"];
+
+    const nameToIdDatabase = {};
+    Object.keys(employeeDatabase).forEach(id => {
+        nameToIdDatabase[employeeDatabase[id]] = id;
+    });
+
+    window.onload = function() {
+        loadData();
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        document.getElementById('applyDate').value = `${yyyy}-${mm}-${dd}`;
+        renderDropdownItems();
+        renderMachineCheckboxes();
+        updateScheduleNo();
+    };
+
+    window.addEventListener("storage", (e) => {
+        if (e.key === "savedRecords" || e.key === "partNoDatabase") {
+            loadData();
+            renderTable();
+        }
+    });
+
+    function loadData() {
+        if (localStorage.getItem("savedRecords")) savedRecords = JSON.parse(localStorage.getItem("savedRecords"));
+        if (localStorage.getItem("partNoDatabase")) partNoDatabase = JSON.parse(localStorage.getItem("partNoDatabase"));
+        renderTable();
+    }
+
+    function renderMachineCheckboxes() {
+        const container = document.getElementById('machineCheckboxGroup');
+        machineList.forEach(m => {
+            container.innerHTML += `<label class="checkbox-item"><input type="checkbox" name="machines" value="${m}"> ${m}</label>`;
+        });
+    }
+
+    function generateScheduleId(dateStr) {
+        const parts = dateStr.split('-');
+        const targetDateStr = `${parts[0]}-${parts[1]}-${parts[2]}`;
+        const todayCount = savedRecords.filter(r => r.applyDate === targetDateStr).length;
+        return `J01-${parts[0]}-${parts[1]}${parts[2]}${String(todayCount + 1).padStart(4, '0')}`;
+    }
+
+    function updateScheduleNo() {
+        const dateInput = document.getElementById('applyDate').value;
+        if (!dateInput) return;
+        document.getElementById('scheduleNo').value = generateScheduleId(dateInput);
+    }
+
+    function updateModalScheduleNo() {
+        const dateInput = document.getElementById('modalApplyDate').value;
+        if (!dateInput) return;
+        document.getElementById('editScheduleNo').innerText = generateScheduleId(dateInput);
+    }
+
+    function saveToLocalStorage() {
+        localStorage.setItem("savedRecords", JSON.stringify(savedRecords));
+        localStorage.setItem("partNoDatabase", JSON.stringify(partNoDatabase));
+        renderTable();
+    }
+
+    function autoFillName(inputId, nameId, errorId) {
+        const idInput = document.getElementById(inputId).value.trim();
+        const errorMsg = document.getElementById(errorId);
+        errorMsg.innerText = "";
+        if (idInput === "") { document.getElementById(nameId).value = ""; return; }
+        if (employeeDatabase[idInput]) { 
+            document.getElementById(nameId).value = employeeDatabase[idInput]; 
+        } else { 
+            document.getElementById(nameId).value = ""; 
+            errorMsg.innerText = "❌ 查無此工號！"; 
+        }
+    }
+
+    function autoFillNames(inputId, nameId, errorId) {
+        const idInput = document.getElementById(inputId).value.trim();
+        const errorMsg = document.getElementById(errorId);
+        errorMsg.innerText = "";
+        if (idInput === "") { document.getElementById(nameId).value = ""; return; }
+        const ids = idInput.split(/[,，\s]+/);
+        let names = [];
+        let hasError = false;
+        ids.forEach(id => {
+            if (id && employeeDatabase[id]) {
+                names.push(employeeDatabase[id]);
+            } else if (id) {
+                hasError = true;
+            }
+        });
+        if (hasError) errorMsg.innerText = "⚠️ 部分工號無效！";
+        document.getElementById(nameId).value = names.join("、");
+    }
+
+    function showDropdown() { renderDropdownItems(); document.getElementById('customDropdown').style.display = 'block'; }
+    function hideDropdown() { document.getElementById('customDropdown').style.display = 'none'; }
+
+    function filterDropdown() {
+        const keyword = document.getElementById('partNo').value.trim().toUpperCase();
+        renderDropdownItems(keyword);
+    }
+
+    function renderDropdownItems(filterKeyword = "") {
+        const dropdown = document.getElementById('customDropdown');
+        dropdown.innerHTML = "";
+        Object.keys(partNoDatabase).forEach(partNo => {
+            if (filterKeyword && !partNo.includes(filterKeyword)) return;
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.innerHTML = `<span>${partNo}</span><button class="item-del-btn" onclick="event.stopPropagation(); deletePartNoItem('${partNo}')">×</button>`;
+            item.onclick = () => selectPartNo(partNo);
+            dropdown.appendChild(item);
+        });
+        dropdown.style.display = (dropdown.innerHTML === "") ? 'none' : 'block';
+    }
+
+    function selectPartNo(partNo) {
+        document.getElementById('partNo').value = partNo;
+        document.getElementById('sizeTotal').value = partNoDatabase[partNo];
+        hideDropdown();
+    }
+
+    function deletePartNoItem(partNo) {
+        if (confirm(`確定要刪除料號 "${partNo}" 的記憶嗎？`)) {
+            delete partNoDatabase[partNo];
+            saveToLocalStorage();
+            renderDropdownItems(document.getElementById('partNo').value.trim().toUpperCase());
+        }
+    }
+
+    function openClearConfirmModal() {
+        if (savedRecords.length === 0) {
+            alert("目前沒有資料可以清空。");
+            return;
+        }
+        document.getElementById('clearConfirmModal').style.display = 'flex';
+    }
+
+    function executeClearTableRecords() {
+        exportToCSV(); 
+        savedRecords = [];   
+        saveToLocalStorage();
+        updateScheduleNo();
+        document.getElementById('clearConfirmModal').style.display = 'none';
+    }
+
+    function addRecord() {
+        const scheduleNo = document.getElementById('scheduleNo').value;
+        const applyDate = document.getElementById('applyDate').value;
+        const applicantId = document.getElementById('applicantId').value;
+        const applicantName = document.getElementById('applicantName').value;
+        const partNo = document.getElementById('partNo').value.trim().toUpperCase(); 
+        const sizeTotal = document.getElementById('sizeTotal').value.trim(); 
+        const quantity = document.getElementById('quantity').value;
+        const remark = document.getElementById('remark').value.trim();
+
+        if (!applicantName) { alert("請輸入正確的申請人工號！"); return; }
+        if (!partNo || !quantity || !sizeTotal) { alert("請填寫完整資訊！"); return; }
+
+        partNoDatabase[partNo] = sizeTotal;
+        savedRecords.push({ scheduleNo, applyDate, applicantName, partNo, finishTime: '未完成', selectedMachines: [], inspectorName: '', measResult: '', sizeTotal, quantity: Number(quantity), retrieverName: '', remark });
+        saveToLocalStorage();
+        updateScheduleNo();
+        
+        // 新增成功後清空欄位
+        document.getElementById('applicantId').value = "";
+        document.getElementById('applicantName').value = "";
+        document.getElementById('partNo').value = ""; 
+        document.getElementById('sizeTotal').value = ""; 
+        document.getElementById('quantity').value = ""; 
+        document.getElementById('remark').value = "";
+    }
+
+    function renderTable() {
+        const tbody = document.querySelector("#historyTable tbody");
+        tbody.innerHTML = ""; 
+        const sortedRecords = [...savedRecords].sort((a, b) => new Date(a.applyDate) - new Date(b.applyDate));
+        
+        sortedRecords.forEach((r, index) => {
+            const originalIndex = savedRecords.indexOf(r);
+            const row = tbody.insertRow();
+            let resultBadge = (r.finishTime !== '未完成' && r.measResult) ? `<span style="color: ${r.measResult === 'OK' ? '#2e7d32' : '#dc3545'}; font-weight: bold; margin-left: 4px;">(${r.measResult})</span>` : "";
+            row.innerHTML = `<td>${r.scheduleNo}</td><td>${r.applyDate}</td><td>${r.applicantName}</td><td>${r.partNo}</td><td>${r.finishTime}${resultBadge}</td><td>${r.selectedMachines ? r.selectedMachines.join('、') : ''}</td><td>${r.inspectorName || '(未完成)'}</td><td>${r.sizeTotal}</td><td>${r.quantity}</td><td>${r.retrieverName || '(未取回)'}</td><td>${r.remark}</td><td><div class="action-container"><button class="btn-action btn-edit" onclick="openEditModal(${originalIndex})">✏️ 修改</button><button class="btn-action btn-meas" onclick="openMeasModal(${originalIndex})">🔬 完成</button><button class="btn-action btn-retr" onclick="openRetrModal(${originalIndex})">🏃 取回</button><button class="btn-action btn-delete" onclick="deleteRecord(${originalIndex})">🗑️ 刪除</button></div></td>`;
+        });
+    }
+
+    function deleteRecord(index) {
+        if (confirm(`確定要刪除這筆記錄嗎？`)) {
+            savedRecords.splice(index, 1); 
+            saveToLocalStorage();
+        }
+    }
+
+    let currentEditingIndex = null;
+    function openEditModal(i) { currentEditingIndex = i; const r = savedRecords[i]; document.getElementById('editScheduleNo').innerText = r.scheduleNo; document.getElementById('modalApplyDate').value = r.applyDate; document.getElementById('modalPartNo').value = r.partNo; document.getElementById('modalQuantity').value = r.quantity; document.getElementById('modalSizeTotal').value = r.sizeTotal; document.getElementById('modalRemark').value = r.remark; document.getElementById('modalApplicantId').value = nameToIdDatabase[r.applicantName] || ""; document.getElementById('modalApplicantName').value = r.applicantName; document.getElementById('editModal').style.display = 'flex'; }
+    function saveEditedData() { savedRecords[currentEditingIndex].scheduleNo = document.getElementById('editScheduleNo').innerText; savedRecords[currentEditingIndex].applyDate = document.getElementById('modalApplyDate').value; savedRecords[currentEditingIndex].applicantName = document.getElementById('modalApplicantName').value; savedRecords[currentEditingIndex].partNo = document.getElementById('modalPartNo').value.toUpperCase(); savedRecords[currentEditingIndex].quantity = Number(document.getElementById('modalQuantity').value); savedRecords[currentEditingIndex].sizeTotal = document.getElementById('modalSizeTotal').value; savedRecords[currentEditingIndex].remark = document.getElementById('modalRemark').value; saveToLocalStorage(); closeModal('editModal'); }
+    
+    function openMeasModal(i) { 
+        currentEditingIndex = i; 
+        document.getElementById('measModal').style.display = 'flex'; 
+        document.getElementById('measScheduleNo').innerText = savedRecords[i].scheduleNo;
+        document.querySelectorAll('input[name="machines"]').forEach(cb => {
+            cb.checked = savedRecords[i].selectedMachines.includes(cb.value);
+        });
+        document.getElementById('modalInspectorId').value = "";
+        document.getElementById('modalInspectorName').value = savedRecords[i].inspectorName;
+    }
+    
+    function openRetrModal(i) { 
+        currentEditingIndex = i; 
+        document.getElementById('retrModal').style.display = 'flex'; 
+        document.getElementById('retrScheduleNo').innerText = savedRecords[i].scheduleNo;
+        document.getElementById('modalRetrieverId').value = "";
+        document.getElementById('modalRetrieverName').value = "";
+    }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function setModalFinishTime() { const now = new Date(); document.getElementById('modalFinishTime').value = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; }
+    
+    function saveMeasData() { 
+        const selected = [];
+        document.querySelectorAll('input[name="machines"]:checked').forEach(cb => selected.push(cb.value));
+        savedRecords[currentEditingIndex].selectedMachines = selected;
+        savedRecords[currentEditingIndex].finishTime = document.getElementById('modalFinishTime').value; 
+        savedRecords[currentEditingIndex].inspectorName = document.getElementById('modalInspectorName').value; 
+        savedRecords[currentEditingIndex].measResult = document.querySelector('input[name="measResult"]:checked').value; 
+        saveToLocalStorage(); 
+        closeModal('measModal'); 
+    }
+    
+    function saveRetrData() { 
+        savedRecords[currentEditingIndex].retrieverName = document.getElementById('modalRetrieverName').value; 
+        saveToLocalStorage(); 
+        closeModal('retrModal'); 
+    }
+    function getWeekNumber(dStr) { const d = new Date(dStr.replace(/\//g, '-')); d.setHours(0,0,0,0); d.setDate(d.getDate()+4-(d.getDay()||7)); const yStart = new Date(d.getFullYear(),0,1); return Math.ceil((((d-yStart)/86400000)+1)/7); }
+    
+    function exportToCSV() {
+        if (savedRecords.length === 0) return;
+        let csv = "\uFEFF";
+        csv += "完成月份,年,月份,週別,編號,產品生產地,P,單位,姓名,供應商,零件,機種,料號,量測結果,使用機台,狀態,量測員/覆判者,量測尺寸總數,量測數量,備註\n";
+        savedRecords.forEach(r => {
+            let vendorCode = j2Employees.includes(r.applicantName) ? "J2" : (j3Employees.includes(r.applicantName) ? "J3" : (j1Employees.includes(r.applicantName) ? "J1" : "未在名單內"));
+            
+            // 處理邏輯：料號前兩碼移除，將備註加在料號最後
+            let rawPartNo = r.partNo;
+            let processedPartNo = rawPartNo.substring(2);
+            if (r.remark && r.remark.trim() !== "") {
+                processedPartNo += " " + r.remark.trim();
+            }
+
+            csv += `"${r.finishTime.split('/')[1]||""}","${new Date(r.applyDate).getFullYear()}","${new Date(r.applyDate).getMonth()+1}","${getWeekNumber(r.applyDate)}","${r.scheduleNo}","台北J1","${r.applyDate}","品保","${r.applicantName}","${vendorCode}","${rawPartNo.substring(0,2)}","${rawPartNo.substring(2,6)}","${processedPartNo}","${r.measResult}","${r.selectedMachines ? r.selectedMachines.join('、') : ''}","${r.finishTime==='未完成'?'待量測':'已完成'}","${r.inspectorName}","${r.sizeTotal}","${r.quantity}",""\n`;
+        });
+        const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = `工作排程_自動計算匯出.csv`; link.click();
+    }
+</script>
+</body>
+</html>
