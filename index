@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>消防點檢 GO</title>
+
+<style>
+*{box-sizing:border-box;font-family:"Microsoft JhengHei",Arial,sans-serif}
+body{margin:0;background:#f5f6fa;color:#24304a}
+.header{
+  background:linear-gradient(135deg,#071737,#2554d8);
+  color:#fff;padding:55px 28px 42px;
+  border-bottom-left-radius:55px;border-bottom-right-radius:55px;
+  box-shadow:0 10px 25px rgba(0,0,0,.18)
+}
+.top{display:flex;align-items:center;gap:18px}
+.logo{
+  width:62px;height:62px;background:#fff;border-radius:18px;
+  display:flex;align-items:center;justify-content:center;color:#244bd6;font-weight:900
+}
+.title h1{margin:0;font-size:32px}
+.title p{margin:6px 0 0;letter-spacing:2px;opacity:.75;font-weight:700}
+.refresh{margin-left:auto;width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:26px}
+.tabs{margin-top:45px;display:flex;justify-content:space-around;font-size:22px;font-weight:900}
+.tab{opacity:.45}
+.tab.active{opacity:1;position:relative}
+.tab.active:after{content:"";position:absolute;left:50%;bottom:-18px;transform:translateX(-50%);width:150px;height:5px;background:#fff;border-radius:10px}
+
+.container{padding:30px 22px}
+.card{background:#fff;border-radius:24px;padding:24px;margin-bottom:22px;box-shadow:0 3px 15px rgba(0,0,0,.08)}
+.user{display:flex;align-items:center;gap:20px}
+.avatar{width:70px;height:70px;border-radius:50%;background:#eef2f8;display:flex;align-items:center;justify-content:center;font-size:34px}
+.label{color:#9aa4b5;font-size:15px;font-weight:900}
+input{border:none;outline:none;font-size:26px;font-weight:900;width:100%;color:#333}
+
+.device{border:2px solid #2f6df6}
+.device-top{display:flex;align-items:center;justify-content:space-between}
+.device-id{font-size:14px;letter-spacing:4px;color:#8a96aa;font-weight:900}
+.device-name{font-size:30px;font-weight:900;font-style:italic;margin-top:6px}
+.tag{background:#e9f0ff;color:#316cff;border-radius:12px;padding:6px 12px;font-size:15px;margin-left:6px;font-style:normal}
+.scan{background:#2468f2;color:#fff;border:none;border-radius:14px;padding:14px 20px;font-size:19px;font-weight:900}
+.info{border-top:1px solid #e5e8ef;margin-top:18px;padding-top:15px;font-size:17px;font-weight:800;line-height:2}
+.info span{float:right}
+.blue{color:#316cff}.orange{color:#d99300}
+
+.section-title{font-size:24px;font-weight:900;margin-bottom:18px}
+.check-item{
+  background:#f8f9fc;border:1px solid #edf0f5;border-radius:18px;
+  padding:22px;margin:18px 0;display:flex;align-items:center;
+  font-size:21px;font-weight:900;color:#344054
+}
+.check{color:#28c76f;font-size:30px;margin-right:18px}
+.submit,.abnormal{
+  width:100%;border:none;border-radius:20px;padding:18px;margin-top:14px;
+  font-size:22px;font-weight:900
+}
+.submit{background:linear-gradient(90deg,#65dca0,#63d5c6);color:white}
+.abnormal{background:#fff1f0;color:#d93025}
+
+.dashboard{display:none}
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.stat-box{background:#f8f9fc;border-radius:18px;padding:20px;text-align:center;font-weight:900}
+.num{font-size:32px;color:#2468f2}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="top">
+    <div class="logo">α</div>
+    <div class="title">
+      <h1>消防點檢 GO</h1>
+      <p>JARRLYTEC SAFETY SYSTEM</p>
+    </div>
+    <div class="refresh" onclick="location.reload()">🔄</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showPage('check')">現場點檢</div>
+    <div class="tab" onclick="showPage('dashboard')">進度看板</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div id="checkPage">
+
+    <div class="card user">
+      <div class="avatar">👤</div>
+      <div>
+        <div class="label">點檢執行人</div>
+        <input id="userName" placeholder="輸入姓名">
+      </div>
+    </div>
+
+    <div class="card device">
+      <div class="device-top">
+        <div>
+          <div class="device-id">DEVICE ID</div>
+          <div class="device-name">
+            <span id="deviceId">請掃描 QR Code</span>
+            <span class="tag" id="deviceType">未識別</span>
+          </div>
+        </div>
+        <button class="scan" onclick="scanQR()">📷 掃描</button>
+      </div>
+
+      <div class="info">
+        📍 設備正確位置：
+        <span class="blue" id="location">雲端位置讀取中...</span><br>
+        📅 設備有效效期：
+        <span class="orange" id="expire">雲端效期讀取中...</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">📋 項目確認清單</div>
+
+      <div class="check-item"><span class="check">✓</span>鋼瓶無鏽蝕變形</div>
+      <div class="check-item"><span class="check">✓</span>皮管無堵塞斷裂</div>
+      <div class="check-item"><span class="check">✓</span>安全插銷已固定</div>
+      <div class="check-item"><span class="check">✓</span>壓力表指針在綠區</div>
+      <div class="check-item"><span class="check">✓</span>前方無障礙物遮擋</div>
+
+      <button class="submit" onclick="submitOK()">🛡 全部正常並送出</button>
+      <button class="abnormal" onclick="submitNG()">⚠️ 發現異常？填寫回報</button>
+    </div>
+
+  </div>
+
+  <div id="dashboardPage" class="dashboard">
+    <div class="card">
+      <div class="stat">
+        <div class="stat-box">
+          <div>設備總數</div>
+          <div class="num">--</div>
+        </div>
+        <div class="stat-box">
+          <div>本月待點檢</div>
+          <div class="num">--</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">📊 廠區完成進度</div>
+      正在計算數據...
+    </div>
+
+    <div class="card">
+      <div class="section-title">⚠️ 滅火器效期警示</div>
+      0　載入中...
+    </div>
+
+    <div class="card">
+      <div class="section-title">🛠 異常損壞明細</div>
+      0　尚未有異常回報
+    </div>
+  </div>
+
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+
+const deviceData = {
+  "J1-CO2-005": {
+    type: "CO2滅火器",
+    location: "J1廠區指定位置",
+    expire: "2027/12/31"
+  },
+  "J1-DCP-033": {
+    type: "乾粉滅火器",
+    location: "J1廠區指定位置",
+    expire: "2027/12/31"
+  }
+};
+
+function loadDevice(){
+  if(!id) return;
+
+  document.getElementById("deviceId").innerText = id;
+
+  const data = deviceData[id] || {
+    type:"未建檔設備",
+    location:"查無雲端位置",
+    expire:"查無效期資料"
+  };
+
+  document.getElementById("deviceType").innerText = data.type;
+  document.getElementById("location").innerText = data.location;
+  document.getElementById("expire").innerText = data.expire;
+}
+
+function scanQR(){
+  alert("手機版可改接 QR Code 掃描功能，目前請用網址 ?id=設備編號");
+}
+
+function submitOK(){
+  const name = document.getElementById("userName").value.trim();
+  if(!name){
+    alert("請先輸入點檢執行人姓名");
+    return;
+  }
+  alert("✅ 傳送成功\n進行下一台點檢");
+}
+
+function submitNG(){
+  alert("請點選異常項目並填寫回報");
+}
+
+function showPage(page){
+  document.getElementById("checkPage").style.display = page==="check" ? "block" : "none";
+  document.getElementById("dashboardPage").style.display = page==="dashboard" ? "block" : "none";
+
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  if(page==="check") document.querySelectorAll(".tab")[0].classList.add("active");
+  else document.querySelectorAll(".tab")[1].classList.add("active");
+}
+
+loadDevice();
+</script>
+
+</body>
+</html>
