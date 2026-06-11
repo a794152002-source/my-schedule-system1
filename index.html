@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>消防點檢 GO</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/html5-qrcode" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="header">
+    <div class="top">
+      <div class="logo">α</div>
+      <div class="title">
+        <h1>消防點檢 GO</h1>
+        <p>JARRLYTEC SAFETY SYSTEM</p>
+      </div>
+      <button class="refresh" onclick="location.reload()">🔄</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="showPage('check')">現場點檢</button>
+      <button class="tab" onclick="showPage('dashboard')">進度看板</button>
+      <button class="tab" onclick="showPage('admin')">設備管理</button>
+    </div>
+  </div>
+
+  <main class="container">
+    <section id="checkPage">
+      <div class="card user-card">
+        <div class="avatar">👤</div>
+        <div class="grow">
+          <div class="label">點檢執行人</div>
+          <input id="inspector" placeholder="輸入姓名" autocomplete="name" />
+        </div>
+      </div>
+
+      <div class="card device-card">
+        <div class="device-top">
+          <div class="grow">
+            <div class="device-label">DEVICE ID</div>
+            <div class="device-name">
+              <span id="deviceId">請掃描或輸入設備編號</span>
+              <span class="tag" id="deviceType">未識別</span>
+            </div>
+          </div>
+          <button class="scan-btn" onclick="openScanner()">📷 掃描</button>
+        </div>
+
+        <div class="manual-row">
+          <input id="manualId" placeholder="手動輸入設備編號，如 J1-CO2-005" />
+          <button onclick="loadManualDevice()">讀取</button>
+        </div>
+
+        <div class="info">
+          📍 設備正確位置：<span class="blue" id="deviceLocation">雲端位置讀取中...</span><br>
+          📅 設備有效效期：<span class="orange" id="deviceExpire">雲端效期讀取中...</span><br>
+          🏢 廠區/樓層：<span class="dark" id="deviceArea">--</span>
+        </div>
+      </div>
+
+      <div id="scannerBox" class="card scanner-card hidden">
+        <div class="section-title">📷 QR Code 掃描</div>
+        <div id="reader"></div>
+        <button class="gray-btn" onclick="closeScanner()">關閉掃描</button>
+      </div>
+
+      <div class="card">
+        <div class="section-title">📋 項目確認清單</div>
+
+        <label class="check-item"><input type="checkbox" class="checkInput" checked value="鋼瓶無鏽蝕變形"><span>✓</span>鋼瓶無鏽蝕變形</label>
+        <label class="check-item"><input type="checkbox" class="checkInput" checked value="皮管無堵塞斷裂"><span>✓</span>皮管無堵塞斷裂</label>
+        <label class="check-item"><input type="checkbox" class="checkInput" checked value="安全插銷已固定"><span>✓</span>安全插銷已固定</label>
+        <label class="check-item"><input type="checkbox" class="checkInput" checked value="壓力表指針在綠區"><span>✓</span>壓力表指針在綠區</label>
+        <label class="check-item"><input type="checkbox" class="checkInput" checked value="前方無障礙物遮擋"><span>✓</span>前方無障礙物遮擋</label>
+
+        <textarea id="remark" placeholder="備註，可不填"></textarea>
+
+        <button class="submit" onclick="submitCheck('正常')">🛡 全部正常並送出</button>
+        <button class="abnormal" onclick="submitCheck('異常')">⚠️ 發現異常送出</button>
+      </div>
+    </section>
+
+    <section id="dashboardPage" class="hidden">
+      <div class="card">
+        <div class="section-title">📊 本月點檢進度</div>
+        <div class="stat">
+          <div class="stat-box"><div>設備總數</div><b id="totalDevices">0</b></div>
+          <div class="stat-box"><div>已完成</div><b id="doneDevices">0</b></div>
+          <div class="stat-box"><div>未完成</div><b id="pendingDevices">0</b></div>
+          <div class="stat-box"><div>異常</div><b id="abnormalDevices">0</b></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">📅 即將到期設備</div>
+        <div id="expireList" class="list"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">🛠 異常損壞明細</div>
+        <div id="abnormalList" class="list"></div>
+      </div>
+    </section>
+
+    <section id="adminPage" class="hidden">
+      <div class="card">
+        <div class="section-title">➕ 新增 / 修改設備</div>
+        <input id="adminId" placeholder="設備編號，例如 J1-CO2-005">
+        <input id="adminType" placeholder="設備類型，例如 CO2滅火器">
+        <input id="adminLocation" placeholder="正確位置">
+        <input id="adminArea" placeholder="廠區/樓層，例如 J1 / 1F">
+        <input id="adminExpire" placeholder="有效期限，例如 2027/12/31">
+        <button class="submit" onclick="saveDevice()">儲存設備</button>
+      </div>
+
+      <div class="card">
+        <div class="section-title">📦 設備清單</div>
+        <div id="deviceList" class="list"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+</body>
+</html>
